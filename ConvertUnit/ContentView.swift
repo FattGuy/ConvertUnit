@@ -8,22 +8,40 @@
 
 import SwiftUI
 
+enum VolumeUnit {
+    case ml
+    case l
+    case cups
+    case pints
+    case gallons
+}
+
 struct ContentView: View {
-    @State private var inputNumber = 0
+    @State private var inputNumber = ""
     @State private var inputUnit = 1
     @State private var outUnit = 1
-    @State private var result = ""
     
     //milliliters, liters, cups, pints, or gallons
-    let unitOptions = ["milliliters", "liters", "cups", "pints", "gallons"]
+    let unitStringOptions = ["milliliters", "liters", "cups", "pints", "gallons"]
+    let unitOptions = [UnitVolume.milliliters, UnitVolume.liters, UnitVolume.cups, UnitVolume.pints, UnitVolume.gallons]
+    
+    private var result: String {
+        guard let inputNumber = Double(self.inputNumber) else { return "" }
+        let converFromUnit = unitOptions[inputUnit]
+        let converToUnit = unitOptions[outUnit]
+        let converFromUnitBase = Measurement(value: inputNumber, unit: converFromUnit)
+        let converToUnitBase = converFromUnitBase.converted(to: converToUnit)
+        
+        return "\(converToUnitBase)"
+    }
     
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("From")) {
                     Picker("Volume conversion", selection: $inputUnit) {
-                        ForEach(0..<unitOptions.count) {
-                            Text(self.unitOptions[$0])
+                        ForEach(0..<unitStringOptions.count) {
+                            Text(self.unitStringOptions[$0])
                         }
                     }
                     .pickerStyle(SegmentedPickerStyle())
@@ -31,15 +49,20 @@ struct ContentView: View {
                 
                 Section(header: Text("To")) {
                     Picker("Volume conversion", selection: $outUnit) {
-                        ForEach(0..<unitOptions.count) {
-                            Text(self.unitOptions[$0])
+                        ForEach(0..<unitStringOptions.count) {
+                            Text(self.unitStringOptions[$0])
                         }
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }
                 
+                Section(header: Text("Input")) {
+                    TextField("How much?", text: $inputNumber)
+                        .keyboardType(.decimalPad)
+                }
+                
                 Section(header: Text("Result")) {
-                    TextField("Test", text: $result)
+                    Text("\(self.result)")
                 }
             }
             .navigationBarTitle("Unit Conversion")
